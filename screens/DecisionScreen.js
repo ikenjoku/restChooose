@@ -261,7 +261,7 @@ class PreFiltersScreen extends React.Component {
                       if (this.state.cuisine.length === 0 && this.state.price
                         === "" &&
                         this.state.rating === "" && this.state.delivery === "") {
-                          passTests = true;
+                        passTests = true;
                       }
                       if (passTests) { filteredRestaurants.push(restaurant); }
                     }
@@ -283,9 +283,156 @@ class PreFiltersScreen extends React.Component {
   }
 }
 
+class ChoiceScreen extends React.Component {
+  constructor(inProps) {
+    super(inProps);
+    this.state = {
+      participantsList: participants,
+      participantsListRefresh: false,
+      selectedVisible: false,
+      vetoVisible: false,
+      vetoDisabled: false,
+      vetoText: "Veto"
+    };
+  }
 
 
+  render() {
+    return (
+      <View style={styles.listScreenContainer}>
+        <Modal
+          presentationStyle={"formSheet"}
+          visible={this.state.selectedVisible}
+          animationType={"slide"}
+          onRequestClose={() => { }}
+        >
+          <View style={styles.selectedContainer}>
+            <View style={styles.selectedInnerContainer}>
+              <Text style={styles.selectedName}>{chosenRestaurant.name}</Text>
+              <View style={styles.selectedDetails}>
+                <Text style={styles.selectedDetailsLine}>
+                  This is a {"\u2605".repeat(chosenRestaurant.rating)} star
+                  </Text>
+                <Text style={styles.selectedDetailsLine}>
+                  {chosenRestaurant.cuisine} restaurant
+                </Text>
+                <Text style={styles.selectedDetailsLine}>
+                  with a price rating of {"$".repeat(chosenRestaurant.price)}
+                </Text>
+                <Text style={styles.selectedDetailsLine}>
+                  that {chosenRestaurant.delivery === "Yes" ? "DOES" : "DOES NOT"} deliver.
+                </Text>
+              </View>
+              <CustomButton
+                text="Accept"
+                width="94%"
+                onPress={() => {
+                  this.setState({
+                    selectedVisible: false,
+                    vetoVisible: false
+                  });
+                  this.props.navigation.navigate("PostChoiceScreen");
+                }} />
+              <CustomButton
+                text={this.state.vetoText}
+                width="94%"
+                disabled={this.state.vetoDisabled ? "true" : "false"}
+                onPress={() => {
+                  this.setState({ selectedVisible: false, vetoVisible: true });
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
 
+        <Modal
+          presentationStyle={"formSheet"}
+          visible={this.state.vetoVisible}
+          animationType={"slide"}
+          onRequestClose={() => { }}
+        >
+          <View style={styles.vetoContainer}>
+            <View style={styles.vetoContainerInner}>
+              <Text style={styles.vetoHeadline}>Who's vetoing?</Text>
+              <ScrollView style={styles.vetoScrollViewContainer}>
+                {participants.map((inValue) => {
+                  if (inValue.vetoed === "no") {
+                    return <TouchableOpacity key={inValue.key}
+                      style={styles.vetoParticipantContainer}
+                      onPress={() => {
+                        for (const participant of participants) {
+                          if (participant.key === inValue.key) {
+                            participant.vetoed = "yes";
+                            break;
+                          }
+                        }
+                        let vetoStillAvailable = false;
+                        let buttonLabel = "No Vetoes Left";
+                        for (const participant of participants) {
+                          if (participant.vetoed === "no") {
+                            vetoStillAvailable = true;
+                            buttonLabel = "Veto";
+                            break;
+                          }
+                        }
+                        for (let i = 0; i < filteredRestaurants.length; i++) {
+                          if (filteredRestaurants[i].key === chosenRestaurant.key) {
+                            filteredRestaurants.splice(i, 1);
+                            break;
+                          }
+                        }
+                        this.setState({
+                          selectedVisible: false,
+                          vetoVisible: false,
+                          vetoText: buttonLabel,
+                          vetoDisabled: !vetoStillAvailable,
+                          participantsListRefresh: !this.state.participantsListRefresh
+                        });
+                        if (filteredRestaurants.length === 1) {
+                          this.props.navigation.navigate("PostChoiceScreen");
+                        }
+                      }} >
+                      <Text style={styles.vetoParticipantName}>
+                        {inValue.firstName + " " + inValue.lastName}
+                      </Text>
+                    </TouchableOpacity>;
+                  }
+                })
+                }
+              </ScrollView>
+              <View style={styles.vetoButtonContainer}>
+                <CustomButton text="Never Mind" width="94%"
+                  onPress={() => {
+                    this.setState({ selectedVisible: true, vetoVisible: false });
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Text style={styles.choiceScreenHeadline}>Choice Screen</Text>
+        <FlatList style={styles.choiceScreenListContainer}
+          data={this.state.participantsList}
+          extraData={this.state.participantsListRefresh}
+          renderItem={({ item }) =>
+            <View style={styles.choiceScreenListItem}>
+              <Text style={styles.choiceScreenListItemName}>
+                {item.firstName} {item.lastName} ({item.relationship})
+            </Text>
+              <Text>Vetoed: {item.vetoed}</Text>
+            </View>
+          } />
+        <CustomButton
+          text="Randomly Choose"
+          width="94%"
+          onPress={() => {
+            const selectedNumber = getRandom(0, filteredRestaurants.length - 1);
+            chosenRestaurant = filteredRestaurants[selectedNumber];
+            this.setState({ selectedVisible: true });
+          }} />
+      </View>);
+  }
+}
 
 const styles = StyleSheet.create({
   decisionTimeScreenContainer: {
@@ -302,7 +449,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     ...Platform.select({
-      ios: { paddingTop: Constants.statusBarHeight },
+      ios: {
+        paddingTop: Constants.statusBarHeight
+      },
       android: {}
     })
   },
@@ -316,20 +465,37 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10
   },
-  whosGoingCheckbox: { marginRight: 20 },
-  whosGoingName: { flex: 1 },
-  preFiltersContainer: { marginTop: Constants.statusBarHeight },
-  preFiltersInnerContainer: {
-    flex: 1, alignItems: "center", paddingTop:
-      20, width: "100%"
+  whosGoingCheckbox: {
+    marginRight: 20
   },
-  preFiltersScreenFormContainer: { width: "96%" },
+  whosGoingName: {
+    flex: 1
+  },
+  preFiltersContainer: {
+    marginTop: Constants.statusBarHeight
+  },
+  preFiltersInnerContainer: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 20,
+    width: "100%"
+  },
+  preFiltersScreenFormContainer: {
+    width: "96%"
+  },
   preFiltersHeadlineContainer: {
-    flex: 1, alignItems: "center",
+    flex: 1,
+    alignItems: "center",
     justifyContent: "center"
   },
-preFiltersHeadline: { fontSize: 30, marginTop: 20, marginBottom: 20 },
-  fieldLabel: { marginLeft: 10 },
+  preFiltersHeadline: {
+    fontSize: 30,
+    marginTop: 20,
+    marginBottom: 20
+  },
+  fieldLabel: {
+    marginLeft: 10
+  },
   pickerContainer: {
     ...Platform.select({
       ios: {},
@@ -362,6 +528,61 @@ preFiltersHeadline: { fontSize: 30, marginTop: 20, marginBottom: 20 },
     flexDirection: "row",
     justifyContent: "center"
   },
+  selectedContainer: {
+    flex: 1,
+    justifyContent: "center"
+  },
+  selectedInnerContainer: {
+    alignItems: "center"
+  },
+  selectedName: {
+    fontSize: 32
+  },
+  selectedDetails: {
+    paddingTop: 80,
+    paddingBottom: 80,
+    alignItems: "center"
+  },
+  selectedDetailsLine: { fontSize: 18 },
+  vetoContainer: {
+    flex: 1,
+    justifyContent: "center"
+  },
+  vetoContainerInner: {
+    justifyContent: "center",
+    alignItems: "center",
+    alignContent: "center"
+  },
+  vetoHeadline: {
+    fontSize: 32,
+    fontWeight: "bold"
+  },
+  vetoScrollViewContainer: { height: "50%" },
+  vetoParticipantContainer: {
+    paddingTop: 20,
+    paddingBottom: 20
+  },
+  vetoParticipantName: { fontSize: 24 },
+  vetoButtonContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: 40
+  },
+  choiceScreenHeadline: {
+    fontSize: 30,
+    marginTop: 20,
+    marginBottom: 20
+  },
+  choiceScreenListContainer: { width: "94%" },
+  choiceScreenListItem: {
+    flexDirection: "row",
+    marginTop: 4,
+    marginBottom: 4,
+    borderColor: "#e0e0e0",
+    borderBottomWidth: 2,
+    alignItems: "center"
+  },
+  choiceScreenListItemName: { flex: 1 },
 
 });
 
@@ -373,6 +594,12 @@ const DecisionScreen = createStackNavigator(
     },
     WhosGoingScreen: {
       screen: WhosGoingScreen
+    },
+    PreFiltersScreen: {
+      screen: PreFiltersScreen
+    },
+    ChoiceScreen: {
+      screen: ChoiceScreen
     }
   },
   {
