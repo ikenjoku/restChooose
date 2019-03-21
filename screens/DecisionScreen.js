@@ -150,6 +150,141 @@ class WhosGoingScreen extends React.Component {
   }
 }
 
+class PreFiltersScreen extends React.Component {
+  constructor(inProps) {
+    super(inProps);
+    this.state = {
+      cuisine: "",
+      price: "",
+      rating: "",
+      delivery: ""
+    };
+  }
+
+  render() {
+    return (
+      <ScrollView style={styles.preFiltersContainer}>
+        <View style={styles.preFiltersInnerContainer}>
+          <View style={styles.preFiltersScreenFormContainer}>
+            <View style={styles.preFiltersHeadlineContainer}>
+              <Text style={styles.preFiltersHeadline}>Pre-Filters</Text>
+            </View>
+            <Text style={styles.fieldLabel}>Cuisine</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                style={styles.picker}
+                selectedValue={this.state.cuisine}
+                prompt="Cuisine"
+                onValueChange={(inItemValue) => this.setState({ cuisine: inItemValue })}
+              >
+                <Picker.Item label="" value="" />
+                <Picker.Item label="Algerian" value="Algerian" />
+                <Picker.Item label="American" value="American" />
+                <Picker.Item label="Other" value="Other" />
+              </Picker>
+            </View>
+            <Text style={styles.fieldLabel}>Price</Text>
+            <View style={styles.pickerContainer}>
+              <Picker style={styles.picker} selectedValue={this.state.price}
+                prompt="Price"
+                onValueChange={(inItemValue) => this.setState({ price: inItemValue })}
+              >
+                <Picker.Item label="" value="" />
+                <Picker.Item label="1" value="1" />
+                <Picker.Item label="2" value="2" />
+                <Picker.Item label="3" value="3" />
+                <Picker.Item label="4" value="4" />
+                <Picker.Item label="5" value="5" />
+              </Picker>
+            </View>
+            <Text style={styles.fieldLabel}>Rating</Text>
+            <View style={styles.pickerContainer}>
+              <Picker style={styles.picker} selectedValue={this.state.rating}
+                prompt="Rating"
+                onValueChange={(inItemValue) => this.setState({ rating: inItemValue })}
+              >
+                <Picker.Item label="" value="" />
+                <Picker.Item label="1" value="1" />
+                <Picker.Item label="2" value="2" />
+                <Picker.Item label="3" value="3" />
+                <Picker.Item label="4" value="4" />
+                <Picker.Item label="5" value="5" />
+              </Picker>
+            </View>
+            <Text style={styles.fieldLabel}>Delivery?</Text>
+            <View style={styles.pickerContainer}>
+              <Picker style={styles.picker} prompt="Delivery?"
+                selectedValue={this.state.delivery}
+                onValueChange={(inItemValue) => this.setState({ delivery: inItemValue })}
+              >
+                <Picker.Item label="" value="" />
+                <Picker.Item label="Yes" value="Yes" />
+                <Picker.Item label="No" value="No" />
+              </Picker>
+            </View>
+          </View>
+          <View style={styles.addScreenButtonsContainer}>
+            <CustomButton
+              text="Next"
+              width="94%"
+              onPress={() => {
+                AsyncStorage.getItem("restaurants",
+                  function (inError, inRestaurants) {
+                    if (inRestaurants === null) {
+                      inRestaurants = [];
+                    } else {
+                      inRestaurants = JSON.parse(inRestaurants);
+                    }
+                    filteredRestaurants = [];
+                    for (const restaurant of inRestaurants) {
+                      let passTests = true;
+                      if (this.state.cuisine !== "") {
+                        if (Object.keys(this.state.cuisine).length > 0) {
+                          if (restaurant.cuisine !== this.state.cuisine) {
+                            passTests = false;
+                          }
+                        }
+                      }
+                      if (this.state.price !== "") {
+                        if (restaurant.price > this.state.price) { passTests = false; }
+                      }
+                      if (this.state.rating !== "") {
+                        if (restaurant.rating < this.state.rating) {
+                          passTests = false;
+                        }
+                      }
+                      if (this.state.delivery !== "") {
+                        if (restaurant.delivery !== this.state.delivery) {
+                          passTests = false;
+                        }
+                      }
+                      if (this.state.cuisine.length === 0 && this.state.price
+                        === "" &&
+                        this.state.rating === "" && this.state.delivery === "") {
+                          passTests = true;
+                      }
+                      if (passTests) { filteredRestaurants.push(restaurant); }
+                    }
+                    if (filteredRestaurants.length === 0) {
+                      Alert.alert("Well, that's an easy choice",
+                        "None of your restaurants match these criteria. Maybe " + "try loosening them up a bit?",
+                        [{ text: "OK" }], { cancelable: false }
+                      );
+                    } else {
+                      this.props.navigation.navigate("ChoiceScreen");
+                    }
+                  }.bind(this)
+                );
+              }} />
+          </View>
+        </View>
+      </ScrollView>
+    );
+  }
+}
+
+
+
 
 
 const styles = StyleSheet.create({
@@ -183,6 +318,50 @@ const styles = StyleSheet.create({
   },
   whosGoingCheckbox: { marginRight: 20 },
   whosGoingName: { flex: 1 },
+  preFiltersContainer: { marginTop: Constants.statusBarHeight },
+  preFiltersInnerContainer: {
+    flex: 1, alignItems: "center", paddingTop:
+      20, width: "100%"
+  },
+  preFiltersScreenFormContainer: { width: "96%" },
+  preFiltersHeadlineContainer: {
+    flex: 1, alignItems: "center",
+    justifyContent: "center"
+  },
+preFiltersHeadline: { fontSize: 30, marginTop: 20, marginBottom: 20 },
+  fieldLabel: { marginLeft: 10 },
+  pickerContainer: {
+    ...Platform.select({
+      ios: {},
+      android: {
+        width: "96%",
+        borderRadius: 8,
+        borderColor: "#c0c0c0",
+        borderWidth: 2,
+        marginLeft: 10,
+        marginBottom: 20,
+        marginTop: 4
+      }
+    })
+  },
+  picker: {
+    ...Platform.select({
+      ios: {
+        width: "96%",
+        borderRadius: 8,
+        borderColor: "#c0c0c0",
+        borderWidth: 2,
+        marginLeft: 10,
+        marginBottom: 20,
+        marginTop: 4
+      },
+      android: {}
+    })
+  },
+  addScreenButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "center"
+  },
 
 });
 
