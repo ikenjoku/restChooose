@@ -52,7 +52,7 @@ class ListPersonScreen extends Component {
             data={this.state.listData}
             renderItem={({ item }) =>
               <View style={styles.personContainer}>
-                <Text style={styles.personName}>{item.name}</Text>
+                <Text style={styles.personName}>{item.lastName}, {item.firstName}</Text>
                 <CustomButton text="Delete"
                   onPress={() => {
                     Alert.alert("Please confirm",
@@ -107,8 +107,9 @@ class AddPersonScreen extends Component {
   constructor(inProps) {
     super(inProps);
     this.state = {
-      name: "",
-      status: "",
+      firstName: "",
+      lastName: "",
+      relationship: "",
       key: `r_${new Date().getTime()}`
     };
   }
@@ -118,20 +119,33 @@ class AddPersonScreen extends Component {
       <ScrollView style={styles.addScreenContainer}>
         <View style={styles.addScreenInnerContainer}>
           <View style={styles.addScreenFormContainer}>
-            <CustomTextInput label="Name" maxLength={20}
-              stateHolder={this} stateFieldName="name" />
-            <Text style={styles.fieldLabel}>Status</Text>
+            <CustomTextInput
+              label="First Name"
+              maxLength={20}
+              stateHolder={this}
+              stateFieldName="firstName"
+            />
+
+            <CustomTextInput
+              label="Surname"
+              maxLength={20}
+              stateHolder={this}
+              stateFieldName="lastName"
+            />
+
+            <Text style={styles.fieldLabel}>Relationship</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 style={styles.picker}
-                prompt="Status"
-                selectedValue={this.state.status}
-                onValueChange={(inItemValue) => this.setState({ status: inItemValue })}
+                prompt="Relationship"
+                selectedValue={this.state.relationship}
+                onValueChange={(inItemValue) => this.setState({ relationship: inItemValue })}
               >
                 <Picker.Item label="" value="" />
-                <Picker.Item label="Child" value="Child" />
-                <Picker.Item label="Teen" value="Teen" />
-                <Picker.Item label="Adult" value="Adult" />
+                <Picker.Item label="Father" value="Father" />
+                <Picker.Item label="Mother" value="Mother" />
+                <Picker.Item label="Son" value="Son" />
+                <Picker.Item label="Daughter" value="Daughter" />
               </Picker>
             </View>
           </View>
