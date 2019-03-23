@@ -32,7 +32,7 @@ class ListScreen extends Component {
         } else {
           inRestaurants = JSON.parse(inRestaurants);
         }
-        this.setState({ listData: inRestaurants });
+        this.setState({ listData: inRestaurants }, () => console.log(this.state));
       }.bind(this)
     );
   };
